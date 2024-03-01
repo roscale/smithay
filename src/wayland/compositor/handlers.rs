@@ -414,6 +414,7 @@ where
                     id,
                     SubsurfaceUserData {
                         surface: surface.clone(),
+                        alive_tracker: Default::default(),
                     },
                 );
 
@@ -437,6 +438,7 @@ where
 #[derive(Debug)]
 pub struct SubsurfaceUserData {
     surface: WlSurface,
+    alive_tracker: AliveTracker,
 }
 
 impl SubsurfaceUserData {
@@ -445,6 +447,7 @@ impl SubsurfaceUserData {
         &self.surface
     }
 }
+
 /// The cached state associated with a subsurface
 #[derive(Debug)]
 pub struct SubsurfaceCachedState {
@@ -565,11 +568,14 @@ where
     }
 
     fn destroyed(
-        _state: &mut D,
+        state: &mut D,
         _client_id: wayland_server::backend::ClientId,
-        _object: &WlSubsurface,
+        surface: &WlSubsurface,
         data: &SubsurfaceUserData,
     ) {
+        data.alive_tracker.destroy_notify();
+        state.subsurface_destroyed(surface);
+
         PrivateSurfaceData::unset_parent(&data.surface);
         PrivateSurfaceData::with_states(&data.surface, |state| {
             state
@@ -581,6 +587,13 @@ where
             *state.cached_state.pending::<SubsurfaceCachedState>() = Default::default();
             *state.cached_state.current::<SubsurfaceCachedState>() = Default::default();
         });
+    }
+}
+
+impl IsAlive for WlSubsurface {
+    fn alive(&self) -> bool {
+        let data: &SubsurfaceUserData = self.data().unwrap();
+        data.alive_tracker.alive()
     }
 }
 

@@ -126,7 +126,9 @@ use crate::utils::{user_data::UserDataMap, Buffer, Logical, Point, Rectangle};
 use wayland_server::backend::GlobalId;
 use wayland_server::protocol::wl_compositor::WlCompositor;
 use wayland_server::protocol::wl_subcompositor::WlSubcompositor;
-use wayland_server::protocol::{wl_buffer, wl_callback, wl_output, wl_region, wl_surface::WlSurface};
+use wayland_server::protocol::{
+    wl_buffer, wl_callback, wl_output, wl_region, wl_subsurface::WlSubsurface, wl_surface::WlSurface,
+};
 use wayland_server::{Client, DisplayHandle, GlobalDispatch, Resource};
 
 /// The role of a subsurface surface.
@@ -590,6 +592,9 @@ pub trait CompositorHandler {
     ///
     /// This allows the compositor to clean up any uses of the surface.
     fn destroyed(&mut self, _surface: &WlSurface) {}
+
+    /// A subsurface was destroyed.
+    fn subsurface_destroyed(&mut self, _surface: &WlSubsurface) {}
 }
 
 /// State of a compositor
